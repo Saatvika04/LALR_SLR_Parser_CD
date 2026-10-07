@@ -35,6 +35,6 @@ id      {letter}({letter}|{digit})*
 ")"          { return RPAREN; }
 ";"          { return SEMICOLON; }
 
-.            { /* ignore any other character */ }
+.            { fprintf(stderr, "LEXICAL ERROR: unexpected character '%s'\n", yytext); }
 
 %%
