@@ -66,13 +66,14 @@ relational_operator
 %%
 
 void yyerror(const char *s) {
-    fprintf(stderr, "Syntax Error: %s\n", s);
+    (void)s;
+    printf("\nSyntax Error");
 }
 
 int main(void) {
     printf("================  LEXICAL ANALYSIS  ================\n");
     int r = yyparse();
-    printf("================     PARSING    ================\n");
+    printf("\n================     PARSING    ================\n");
     printf("Parser: LALR\n");
     printf("Result: %s\n", r == 0 ? "ACCEPTED" : "SYNTAX ERROR");
     return r;
