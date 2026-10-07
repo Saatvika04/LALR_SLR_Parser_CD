@@ -12,29 +12,29 @@ id      {letter}({letter}|{digit})*
 
 [ \t\r\n]+   { /* skip whitespace */ }
 
-"if"         { printf("IF ");   return IF; }
-"else"       { printf("ELSE "); return ELSE; }
+"if"         { return IF; }
+"else"       { return ELSE; }
 
-{id}         { printf("ID(%s) ", yytext); return ID; }
-{digit}+     { printf("NUM(%s) ", yytext); return NUM; }
+{id}         { return ID; }
+{digit}+     { return NUM; }
 
-"="          { printf("ASSIGN "); return ASSIGN; }
-"+"          { printf("PLUS ");   return PLUS; }
-"-"          { printf("MINUS ");  return MINUS; }
-"*"          { printf("MULT ");   return MULT; }
-"/"          { printf("DIV ");    return DIV; }
+"="          { return ASSIGN; }
+"+"          { return PLUS; }
+"-"          { return MINUS; }
+"*"          { return MULT; }
+"/"          { return DIV; }
 
-"<="         { printf("LE "); return LE; }
-">="         { printf("GE "); return GE; }
-"=="         { printf("EQ "); return EQ; }
-"!="         { printf("NE "); return NE; }
-"<"          { printf("LT "); return LT; }
-">"          { printf("GT "); return GT; }
+"<="         { return LE; }
+">="         { return GE; }
+"=="         { return EQ; }
+"!="         { return NE; }
+"<"          { return LT; }
+">"          { return GT; }
 
-"("          { printf("LPAREN "); return LPAREN; }
-")"          { printf("RPAREN "); return RPAREN; }
-";"          { printf("SEMICOLON "); return SEMICOLON; }
+"("          { return LPAREN; }
+")"          { return RPAREN; }
+";"          { return SEMICOLON; }
 
-.            { /* ignore any other character */ }
+.            { fprintf(stderr, "LEXICAL ERROR: unexpected character '%s'\n", yytext); }
 
 %%
