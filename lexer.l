@@ -1,4 +1,4 @@
-%option noyywrap
+%option noyywrap noinput nounput
 %{
 #include <stdio.h>
 #include "lalr_parser.tab.h"
