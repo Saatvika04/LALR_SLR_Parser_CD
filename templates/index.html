@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LALR vs SLR — Parser Visualizer</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <header class="topbar">
+    <h1>LALR vs SLR <span class="muted">· Parser Visualizer</span></h1>
+    <div class="mode-badge">Mode: <strong id="mode-label">SLR</strong></div>
+  </header>
+
+  <main class="container">
+
+    <!-- Source input -->
+    <section class="card input-card">
+      <h2>Source Input</h2>
+      <label for="mode">Parsing mode</label>
+      <select id="mode">
+        <option value="slr" selected>SLR — arithmetic + assignment</option>
+        <option value="lalr">LALR — full grammar (if/else)</option>
+      </select>
+      <label for="source">Input string</label>
+      <textarea id="source" rows="5" placeholder="e.g. x = 10 + 20 * 3;"></textarea>
+      <div class="controls">
+        <select id="sample">
+          <option value="">— load a sample —</option>
+          {% for s in samples %}
+          <option value="{{ s.input }}">{{ s.label }}</option>
+          {% endfor %}
+        </select>
+        <button id="run" class="btn primary">Run Parser</button>
+        <button id="reset" class="btn">Reset</button>
+      </div>
+    </section>
+
+    <!-- Result + summary -->
+    <section class="card result-card">
+      <div id="banner" class="banner hidden"></div>
+      <div class="cards" id="summary"></div>
+    </section>
+
+    <!-- Trace table -->
+    <section class="card trace-card">
+      <div class="trace-head">
+        <h2>Parser Trace</h2>
+        <div class="playback">
+          <button id="prev" class="btn small">&#9664; Prev</button>
+          <span id="playback-info">—</span>
+          <button id="next" class="btn small">Next &#9654;</button>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table id="trace-table">
+          <thead>
+            <tr>
+              <th>Step</th>
+              <th>Stack</th>
+              <th>Remaining Input</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <p id="empty-trace" class="muted">Run a parse to see the step-by-step trace.</p>
+    </section>
+
+    <!-- Grammar + parsing table -->
+    <div class="grid-2">
+      <section class="card">
+        <h2>Grammar <span class="muted">(SLR mode)</span></h2>
+        <pre id="grammar"></pre>
+      </section>
+      <section class="card">
+        <h2>SLR Parsing Table</h2>
+        <div class="table-wrap">
+          <table id="parse-table"></table>
+        </div>
+      </section>
+    </div>
+
+    <!-- State diagram -->
+    <section class="card">
+      <h2>State Diagram</h2>
+      <div id="diagram" class="diagram"></div>
+    </section>
+
+  </main>
+
+  <script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>
