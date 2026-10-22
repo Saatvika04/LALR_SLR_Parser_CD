@@ -46,6 +46,7 @@ test: all
 	python3 tests/test_lalr_trace.py --parser $(PARSER_BIN)
 	python3 tests/test_lalr_automaton.py
 	python3 tests/test_slr_parser.py
+	python3 tests/test_flask_integration.py
 	bash test_lexer.sh
 
 traces: $(PARSER_BIN)

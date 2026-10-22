@@ -46,12 +46,14 @@ const modeLabel = $("mode-label");
 // ---------------------------------------------------------------------------
 // Init
 // ---------------------------------------------------------------------------
-renderGrammar();
 loadAutomaton();
 
 modeSel.addEventListener("change", function () {
   state.mode = modeSel.value;
   modeLabel.textContent = modeSel.value.toUpperCase();
+  $("grammar-title").textContent = "Grammar (" + modeSel.value.toUpperCase() + " mode)";
+  $("table-title").textContent = modeSel.value.toUpperCase() + " Parsing Table";
+  loadAutomaton();
 });
 sampleSel.addEventListener("change", function () {
   if (sampleSel.value !== "") sourceEl.value = sampleSel.value;
@@ -64,15 +66,24 @@ $("next").addEventListener("click", function () { stepTo(state.current + 1); });
 // ---------------------------------------------------------------------------
 // Grammar + automaton
 // ---------------------------------------------------------------------------
-function renderGrammar() {
-  grammarEl.textContent = GRAMMAR.join("\n");
+function renderGrammar(grammar) {
+  grammarEl.textContent = (grammar || GRAMMAR).join("\n");
 }
 
 async function loadAutomaton() {
-  const res = await fetch("/automaton");
-  state.automaton = await res.json();
-  renderParseTable(state.automaton);
-  renderDiagram(state.automaton);
+  try {
+    const res = await fetch("/automaton?mode=" + encodeURIComponent(state.mode));
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Automaton could not be loaded.");
+    state.automaton = data;
+    renderGrammar(data.grammar);
+    renderParseTable(data);
+    renderDiagram(data);
+  } catch (err) {
+    state.automaton = null;
+    parseTable.textContent = err.message;
+    diagram.textContent = err.message;
+  }
 }
 
 function renderParseTable(a) {
@@ -213,6 +224,9 @@ function renderBanner(data) {
   } else if (data.result === "SYNTAX ERROR") {
     banner.classList.add("bad");
     banner.textContent = "SYNTAX ERROR" + (data.error ? " — " + data.error : "");
+  } else if (!data.result) {
+    banner.classList.add("warn");
+    banner.textContent = "PARSER UNAVAILABLE" + (data.error ? " — " + data.error : "");
   } else {
     banner.classList.add("warn");
     banner.textContent = data.result + (data.error ? " — " + data.error : "");
