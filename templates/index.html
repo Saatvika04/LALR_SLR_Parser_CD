@@ -9,7 +9,7 @@
 <body>
   <header class="topbar">
     <h1>LALR vs SLR <span class="muted">· Parser Visualizer</span></h1>
-    <div class="mode-badge">Mode: <strong id="mode-label">SLR</strong></div>
+    <div class="mode-badge">Context: <strong id="mode-label">SLR</strong></div>
   </header>
 
   <main class="container">
@@ -17,13 +17,13 @@
     <!-- Source input -->
     <section class="card input-card">
       <h2>Source Input</h2>
-      <label for="mode">Parsing mode</label>
+      <label for="mode">Context mode (grammar / table / diagram)</label>
       <select id="mode">
         <option value="slr" selected>SLR — arithmetic + assignment</option>
         <option value="lalr">LALR — full grammar (if/else)</option>
       </select>
       <label for="source">Input string</label>
-      <textarea id="source" rows="5" placeholder="e.g. x = 10 + 20 * 3;"></textarea>
+      <textarea id="source" rows="4" placeholder="e.g. if (x > 10) y = x + 5;"></textarea>
       <div class="controls">
         <select id="sample">
           <option value="">— load a sample —</option>
@@ -36,48 +36,70 @@
       </div>
     </section>
 
-    <!-- Result + summary -->
-    <section class="card result-card">
-      <div id="banner" class="banner hidden"></div>
-      <div class="cards" id="summary"></div>
+    <!-- Side-by-side comparison -->
+    <div class="compare-grid">
+      <section class="card compare-col">
+        <h2 class="col-title">SLR <span class="muted">arithmetic + assignment</span></h2>
+        <div id="banner-slr" class="banner hidden"></div>
+        <div class="cards" id="summary-slr"></div>
+        <div class="table-wrap">
+          <table class="trace-table" id="trace-table-slr">
+            <thead>
+              <tr><th>Step</th><th>Stack</th><th>Remaining Input</th><th>Action</th></tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <p id="empty-slr" class="empty-trace muted">Run a parse to see the SLR trace.</p>
+      </section>
+
+      <section class="card compare-col">
+        <h2 class="col-title">LALR <span class="muted">full grammar</span></h2>
+        <div id="banner-lalr" class="banner hidden"></div>
+        <div class="cards" id="summary-lalr"></div>
+        <div class="table-wrap">
+          <table class="trace-table" id="trace-table-lalr">
+            <thead>
+              <tr><th>Step</th><th>Stack</th><th>Remaining Input</th><th>Action</th></tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <p id="empty-lalr" class="empty-trace muted">Run a parse to see the LALR trace.</p>
+      </section>
+    </div>
+
+    <!-- Conflict panel -->
+    <section class="card" id="conflict-card">
+      <h2>Grammar Conflicts <span class="muted">(LALR)</span></h2>
+      <div id="conflicts"><p class="muted">No conflicts reported.</p></div>
     </section>
 
-    <!-- Trace table -->
-    <section class="card trace-card">
+    <!-- Grammar + parsing table -->
+    <div class="grid-2">
+      <section class="card">
+        <h2 id="grammar-title">Grammar (SLR mode)</h2>
+        <pre id="grammar"></pre>
+      </section>
+      <section class="card">
+        <h2 id="table-title">SLR Parsing Table</h2>
+        <div class="table-wrap">
+          <table id="parse-table"></table>
+        </div>
+      </section>
+    </div>
+
+    <!-- State diagram -->
+    <section class="card">
       <div class="trace-head">
-        <h2>Parser Trace</h2>
+        <h2 id="diagram-title">State Diagram (SLR)</h2>
         <div class="playback">
           <button id="prev" class="btn small">&#9664; Prev</button>
           <span id="playback-info">—</span>
           <button id="next" class="btn small">Next &#9654;</button>
         </div>
       </div>
-      <div class="table-wrap">
-        <table id="trace-table">
-          <thead>
-            <tr>
-              <th>Step</th>
-              <th>Stack</th>
-              <th>Remaining Input</th>
-              <th>Action</th>
-            </tr>
-          </thead>
-          <tbody></tbody>
-        </table>
-      </div>
-      <p id="empty-trace" class="muted">Run a parse to see the step-by-step trace.</p>
-    </section>
-
-    <section class="card">
-      <h2 id="grammar-title">Grammar (SLR mode)</h2>
-      <pre id="grammar"></pre>
-    </section>
-
-    <section class="card">
-      <h2 id="table-title">SLR Parsing Table</h2>
-      <div class="table-wrap">
-        <table id="parse-table"></table>
-      </div>
+      <div id="diagram" class="diagram"></div>
     </section>
 
   </main>

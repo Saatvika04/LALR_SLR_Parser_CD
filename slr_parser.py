@@ -366,6 +366,8 @@ def build_automaton():
         "parser": "SLR",
         "terminals": TERMINALS,
         "nonterminals": [n for n in NONTERMINALS if n != "S'"],
+        "grammar": [lhs + " → " + " ".join(rhs) for lhs, rhs in PRODUCTIONS],
+        "conflicts": [],
         "first": {n: sorted(first[n]) for n in NONTERMINALS},
         "follow": {n: sorted(follow[n]) for n in NONTERMINALS},
         "states": out,
