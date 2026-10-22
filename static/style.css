@@ -121,6 +121,7 @@ textarea {
 .playback { display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: 13px; }
 
 .table-wrap { overflow-x: auto; }
+.parse-table-wrap { max-height: 65vh; overflow: auto; }
 table { width: 100%; border-collapse: collapse; font-size: 13px; }
 th, td { padding: 6px 10px; border-bottom: 1px solid var(--border); text-align: left; white-space: nowrap; }
 thead th {
@@ -169,17 +170,9 @@ pre {
 
 .muted { color: var(--muted); }
 
-/* Comparison layout */
-.compare-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-@media (max-width: 900px) { .compare-grid { grid-template-columns: 1fr; } }
-.compare-col { display: flex; flex-direction: column; }
 .col-title { margin: 0 0 12px; font-size: 16px; font-weight: 600; }
 .col-title .muted { font-weight: 400; font-size: 13px; }
 .empty-trace { margin: 12px 0 0; }
-
-/* Grammar + parsing table side by side */
-.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-@media (max-width: 800px) { .grid-2 { grid-template-columns: 1fr; } }
 
 /* Conflict panel */
 .conflict { padding: 8px 0; border-bottom: 1px solid var(--border); }
