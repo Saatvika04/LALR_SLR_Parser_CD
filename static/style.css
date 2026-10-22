@@ -186,15 +186,17 @@ pre {
 .conflict:last-child { border-bottom: none; }
 .conflict-head { font-weight: 600; }
 .conflict-note { color: var(--muted); font-size: 12.5px; margin-top: 4px; }
+#conflict-card { border-left: 4px solid var(--reduce); }
 
-/* State diagram */
-.diagram { overflow-x: auto; }
-.state-diagram { display: block; margin: 0 auto; }
-.node-group .node { fill: #e2e8f0; stroke: #64748b; stroke-width: 1.5; }
-.node-group .node-label { font-size: 10px; fill: #0f172a; font-weight: 600; pointer-events: none; }
-.node-group.active .node { fill: #2563eb; stroke: #1e40af; }
-.node-group.active .node-label { fill: #ffffff; }
-.edge { stroke: #cbd5e1; stroke-width: 1.2; }
-.edge.shift { stroke: #94a3b8; }
-.edge.goto { stroke: #cbd5e1; stroke-dasharray: 3 3; }
-.edge-label { font-size: 9px; fill: #64748b; }
+.state-details-card h3 { margin: 16px 0 6px; font-size: 13px; }
+.state-details-card h3:first-child { margin-top: 0; }
+.state-details-card ul { margin: 0; padding-left: 22px; }
+.state-details-card li { margin: 3px 0; font-family: ui-monospace, "SF Mono", Consolas, monospace; font-size: 12px; overflow-wrap: anywhere; }
+.state-navigation { display: flex; align-items: center; gap: 8px; }
+.state-navigation label { margin: 0; }
+.state-navigation select { width: auto; min-width: 100px; }
+@media (max-width: 650px) {
+  .state-details-card .trace-head { align-items: flex-start; flex-direction: column; gap: 10px; }
+  .state-navigation { width: 100%; }
+  .state-navigation select { flex: 1; }
+}

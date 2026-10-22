@@ -25,6 +25,7 @@ const $ = (id) => document.getElementById(id);
 const state = {
   mode: "slr",
   automaton: null,
+  selectedState: null,
   compare: null,
   steps: [],
   current: -1,
@@ -36,9 +37,13 @@ const modeSel = $("mode");
 const sampleSel = $("sample");
 const grammarEl = $("grammar");
 const parseTable = $("parse-table");
-const diagram = $("diagram");
 const playbackInfo = $("playback-info");
 const modeLabel = $("mode-label");
+const stateCount = $("state-count");
+const parserCounts = { slr: $("slr-automaton-count"), lalr: $("lalr-automaton-count") };
+const stateSelect = $("state-select");
+const stateDetails = $("state-details");
+const stateDetailsTitle = $("state-details-title");
 const conflictsEl = $("conflicts");
 
 // Per-column DOM refs
@@ -67,7 +72,6 @@ modeSel.addEventListener("change", function () {
   modeLabel.textContent = modeSel.value.toUpperCase();
   $("grammar-title").textContent = "Grammar (" + modeSel.value.toUpperCase() + " mode)";
   $("table-title").textContent = modeSel.value.toUpperCase() + " Parsing Table";
-  $("diagram-title").textContent = "State Diagram (" + modeSel.value.toUpperCase() + ")";
   loadAutomaton();
   syncStepsToMode();
 });
@@ -78,6 +82,10 @@ $("run").addEventListener("click", runCompare);
 $("reset").addEventListener("click", resetAll);
 $("prev").addEventListener("click", function () { stepTo(state.current - 1); });
 $("next").addEventListener("click", function () { stepTo(state.current + 1); });
+stateSelect.addEventListener("change", function () {
+  const selectedState = Number(stateSelect.value);
+  if (Number.isInteger(selectedState)) selectAutomatonState(selectedState);
+});
 
 // Point playback at the active mode's trace after a mode switch or a parse.
 function syncStepsToMode() {
@@ -92,7 +100,68 @@ function syncStepsToMode() {
 // Grammar + automaton
 // ---------------------------------------------------------------------------
 function renderGrammar(grammar) {
-  grammarEl.textContent = (grammar || GRAMMAR).join("\n");
+  grammarEl.textContent = (Array.isArray(grammar) ? grammar : GRAMMAR).join("\n");
+}
+
+function isAutomaton(data) {
+  if (!(data && typeof data.parser === "string" &&
+    Array.isArray(data.terminals) && data.terminals.every(function (symbol) { return typeof symbol === "string"; }) &&
+    Array.isArray(data.nonterminals) && data.nonterminals.every(function (symbol) { return typeof symbol === "string"; }) &&
+    Array.isArray(data.grammar) && data.grammar.every(function (production) { return typeof production === "string"; }) &&
+    Array.isArray(data.states) &&
+    Array.isArray(data.conflicts) && data.conflicts.every(function (conflict) {
+      return typeof conflict === "string" || (conflict && Number.isInteger(conflict.state) &&
+        typeof conflict.token === "string" && typeof conflict.type === "string" &&
+        typeof conflict.resolution === "string" &&
+        (conflict.note === undefined || typeof conflict.note === "string"));
+    }) && data.states.length && data.states.every(function (st) {
+      return st && Number.isInteger(st.id) && Array.isArray(st.items) &&
+        st.items.every(function (item) { return typeof item === "string"; }) &&
+        Array.isArray(st.actions) && st.actions.every(function (action) {
+          return action && typeof action.symbol === "string" &&
+            ["shift", "reduce", "accept"].indexOf(action.action) !== -1 &&
+            (action.action !== "shift" || Number.isInteger(action.to)) &&
+            (action.action !== "reduce" || (typeof action.production === "string" && Number.isInteger(action.production_index)));
+        }) && Array.isArray(st.gotos) && st.gotos.every(function (go) {
+          return go && typeof go.symbol === "string" && Number.isInteger(go.to);
+        });
+    }))) return false;
+  const ids = new Set(data.states.map(function (st) { return st.id; }));
+  return data.states.every(function (st) {
+    return st.actions.every(function (action) { return action.action !== "shift" || ids.has(action.to); }) &&
+      st.gotos.every(function (go) { return ids.has(go.to); });
+  });
+}
+
+function updateParserCount(mode, data) {
+  parserCounts[mode].textContent = "(" + data.parser + " · " + data.states.length + " states)";
+}
+
+async function loadOtherParserCount(mode) {
+  try {
+    const res = await fetch("/automaton?mode=" + encodeURIComponent(mode));
+    const data = await res.json();
+    if (!res.ok || !isAutomaton(data)) throw new Error("Automaton is unavailable.");
+    updateParserCount(mode, data);
+    if (mode === "lalr") renderConflicts(data);
+  } catch (err) {
+    parserCounts[mode].textContent = "(state count unavailable)";
+    if (mode === "lalr") {
+      conflictsEl.innerHTML = '<p class="muted">LALR conflict information is unavailable.</p>';
+    }
+  }
+}
+
+function renderStateOptions(states, selectedState) {
+  stateSelect.innerHTML = "";
+  states.forEach(function (automatonState) {
+    const option = document.createElement("option");
+    option.value = String(automatonState.id);
+    option.textContent = "State " + automatonState.id;
+    stateSelect.appendChild(option);
+  });
+  stateSelect.disabled = false;
+  stateSelect.value = String(selectedState);
 }
 
 async function loadAutomaton() {
@@ -100,17 +169,31 @@ async function loadAutomaton() {
     const res = await fetch("/automaton?mode=" + encodeURIComponent(state.mode));
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || "Automaton could not be loaded.");
+    if (!isAutomaton(data)) throw new Error("Automaton response did not match the expected format.");
     state.automaton = data;
+    state.selectedState = null;
+    stateCount.textContent = "· " + data.states.length + " states";
+    updateParserCount(state.mode, data);
+    loadOtherParserCount(state.mode === "slr" ? "lalr" : "slr");
     renderGrammar(data.grammar);
     renderParseTable(data);
-    renderConflicts(data);
-    renderDiagram(data);
-    highlightDiagram();
+    if (data.parser === "LALR") renderConflicts(data);
+    const initialState = state.steps.length && state.steps[state.current]
+      ? state.steps[state.current].state
+      : data.states[0].id;
+    const selectedState = data.states.some(function (item) { return item.id === initialState; })
+      ? initialState
+      : data.states[0].id;
+    renderStateOptions(data.states, selectedState);
+    selectAutomatonState(selectedState);
   } catch (err) {
     state.automaton = null;
+    stateCount.textContent = "";
+    parserCounts[state.mode].textContent = "(state count unavailable)";
     parseTable.textContent = err.message;
-    conflictsEl.innerHTML = '<p class="muted">' + esc(err.message) + "</p>";
-    diagram.innerHTML = "";
+    stateSelect.innerHTML = '<option value="">Automaton unavailable</option>';
+    stateSelect.disabled = true;
+    stateDetails.innerHTML = '<p class="muted">' + esc(err.message) + "</p>";
   }
 }
 
@@ -161,129 +244,96 @@ function renderConflicts(a) {
   }).join("");
 }
 
-// ---------------------------------------------------------------------------
-// State diagram (circular layout, driven by the real automaton)
-// ---------------------------------------------------------------------------
-const SVG_NS = "http://www.w3.org/2000/svg";
-
-function renderDiagram(a) {
-  if (!a || !a.states || !a.states.length) { diagram.innerHTML = ""; return; }
-  const states = a.states;
-  const n = states.length;
-  const W = 1000, H = 1000;
-  const cx = W / 2, cy = H / 2;
-  const R = Math.min(cx, cy) - 130;
-  const nodeR = n > 30 ? 13 : 20;
-
-  const svg = document.createElementNS(SVG_NS, "svg");
-  svg.setAttribute("viewBox", "0 0 " + W + " " + H);
-  svg.setAttribute("class", "state-diagram");
-
-  const defs = document.createElementNS(SVG_NS, "defs");
-  defs.innerHTML =
-    '<marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">' +
-    '<path d="M 0 0 L 10 5 L 0 10 z" fill="#94a3b8"/></marker>';
-  svg.appendChild(defs);
-
-  const pos = {};
-  states.forEach(function (st, i) {
-    const ang = (2 * Math.PI * i) / n - Math.PI / 2;
-    pos[st.id] = { x: cx + R * Math.cos(ang), y: cy + R * Math.sin(ang) };
+function selectAutomatonState(stateId) {
+  const automatonState = state.automaton && state.automaton.states.find(function (item) {
+    return item.id === stateId;
   });
-
-  const edgeMap = new Map();
-  states.forEach(function (st) {
-    st.actions.forEach(function (act) {
-      if (act.action === "shift") addEdgeData(edgeMap, st.id, act.to, act.symbol, "shift");
-    });
-    st.gotos.forEach(function (g) {
-      addEdgeData(edgeMap, st.id, g.to, g.symbol, "goto");
-    });
-  });
-
-  edgeMap.forEach(function (e) {
-    drawEdge(svg, pos, e.from, e.to, e.labels.join(", "), e.kinds.has("shift") ? "shift" : "goto");
-  });
-
-  states.forEach(function (st) {
-    const p = pos[st.id];
-    const g = document.createElementNS(SVG_NS, "g");
-    g.setAttribute("class", "node-group");
-    g.setAttribute("data-state", st.id);
-    g.innerHTML =
-      '<circle cx="' + p.x + '" cy="' + p.y + '" r="' + nodeR + '" class="node"/>' +
-      '<text x="' + p.x + '" y="' + (p.y + 4) + '" class="node-label" text-anchor="middle">' + st.id + "</text>";
-    svg.appendChild(g);
-  });
-
-  diagram.innerHTML = "";
-  diagram.appendChild(svg);
+  if (!automatonState) return;
+  state.selectedState = stateId;
+  renderStateDetails(stateId);
+  stateSelect.value = String(stateId);
 }
 
-function addEdgeData(edgeMap, from, to, label, kind) {
-  if (from === to) return; // skip self-loops (rare in LR automata)
-  const key = from + "->" + to;
-  if (!edgeMap.has(key)) edgeMap.set(key, { from: from, to: to, labels: [], kinds: new Set() });
-  const e = edgeMap.get(key);
-  if (e.labels.indexOf(label) === -1) e.labels.push(label);
-  e.kinds.add(kind);
+function appendDetailList(parent, title, values) {
+  const heading = document.createElement("h3");
+  heading.textContent = title;
+  parent.appendChild(heading);
+  const list = document.createElement("ul");
+  values.forEach(function (value) {
+    const item = document.createElement("li");
+    item.textContent = value;
+    list.appendChild(item);
+  });
+  if (!values.length) {
+    const item = document.createElement("li");
+    item.textContent = "None";
+    list.appendChild(item);
+  }
+  parent.appendChild(list);
 }
 
-function drawEdge(svg, pos, from, to, label, kind) {
-  const a = pos[from], b = pos[to];
-  const dx = b.x - a.x, dy = b.y - a.y;
-  const len = Math.hypot(dx, dy);
-  if (len < 1) return;
-  const off = 26;
-  const sx = a.x + (dx / len) * off, sy = a.y + (dy / len) * off;
-  const ex = b.x - (dx / len) * (off + 8), ey = b.y - (dy / len) * (off + 8);
-
-  const line = document.createElementNS(SVG_NS, "line");
-  line.setAttribute("x1", sx); line.setAttribute("y1", sy);
-  line.setAttribute("x2", ex); line.setAttribute("y2", ey);
-  line.setAttribute("class", "edge " + kind);
-  line.setAttribute("marker-end", "url(#arrow)");
-  svg.appendChild(line);
-
-  const mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2;
-  const t = document.createElementNS(SVG_NS, "text");
-  t.setAttribute("x", mx); t.setAttribute("y", my - 6);
-  t.setAttribute("class", "edge-label");
-  t.setAttribute("text-anchor", "middle");
-  t.textContent = label;
-  svg.appendChild(t);
+function renderStateDetails(stateId) {
+  const automatonState = state.automaton && state.automaton.states.find(function (item) {
+    return item.id === stateId;
+  });
+  if (!automatonState) return;
+  stateDetailsTitle.textContent = state.automaton.parser + " State " + stateId;
+  stateDetails.innerHTML = "";
+  appendDetailList(stateDetails, "LR Items", automatonState.items);
+  appendDetailList(stateDetails, "Actions", automatonState.actions.map(function (action) {
+    if (action.action === "shift") return action.symbol + ": shift to state " + action.to;
+    if (action.action === "reduce") return action.symbol + ": reduce by r" + action.production_index + " (" + action.production + ")";
+    return action.symbol + ": " + action.action;
+  }));
+  appendDetailList(stateDetails, "Gotos", automatonState.gotos.map(function (go) {
+    return go.symbol + ": go to state " + go.to;
+  }));
 }
 
-function highlightDiagram() {
+function syncSelectedStateToTrace() {
   if (!state.automaton) return;
   const s = (state.current >= 0 && state.steps[state.current]) ? state.steps[state.current].state : -1;
-  diagram.querySelectorAll(".node-group").forEach(function (g) {
-    g.classList.toggle("active", parseInt(g.getAttribute("data-state"), 10) === s);
-  });
+  if (s >= 0) selectAutomatonState(s);
+  else if (state.selectedState !== null) renderStateDetails(state.selectedState);
 }
 
 // ---------------------------------------------------------------------------
 // Comparison / parse
 // ---------------------------------------------------------------------------
 async function runCompare() {
-  const res = await fetch("/compare", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ input: sourceEl.value }),
-  });
-  const data = await res.json();
-  state.compare = data;
-  renderColumn("slr", data.slr || {});
-  renderColumn("lalr", data.lalr || {});
+  try {
+    const res = await fetch("/compare", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ input: sourceEl.value }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Parser comparison failed.");
+    if (!data || typeof data !== "object") throw new Error("Comparison response was invalid.");
+    state.compare = {
+      slr: data.slr && typeof data.slr === "object" ? data.slr : unavailableResult("SLR result is missing."),
+      lalr: data.lalr && typeof data.lalr === "object" ? data.lalr : unavailableResult("LALR result is missing."),
+    };
+  } catch (err) {
+    state.compare = { slr: unavailableResult(err.message), lalr: unavailableResult(err.message) };
+  }
+  renderColumn("slr", state.compare.slr);
+  renderColumn("lalr", state.compare.lalr);
   syncStepsToMode();
+}
+
+function unavailableResult(message) {
+  return { result: "UNAVAILABLE", error: message, steps: [], stats: {} };
 }
 
 function renderColumn(mode, data) {
   const col = columns[mode];
+  data = data && typeof data === "object" ? data : unavailableResult("Parser result is invalid.");
   renderBanner(col.banner, data);
-  renderSummary(col.summary, data.stats || {});
-  renderTrace(col.tbody, data.steps || []);
-  col.empty.style.display = (data.steps || []).length ? "none" : "block";
+  renderSummary(col.summary, data.stats && typeof data.stats === "object" ? data.stats : {});
+  const steps = Array.isArray(data.steps) ? data.steps : [];
+  renderTrace(col.tbody, steps);
+  col.empty.style.display = steps.length ? "none" : "block";
 }
 
 function renderBanner(el, data) {
@@ -315,14 +365,23 @@ function renderSummary(el, stats) {
   items.forEach(function (pair) {
     const d = document.createElement("div");
     d.className = "stat";
-    d.innerHTML = '<span class="stat-val">' + pair[1] + '</span><span class="stat-label">' + pair[0] + "</span>";
+    const value = document.createElement("span");
+    value.className = "stat-val";
+    value.textContent = Number.isFinite(pair[1]) ? String(pair[1]) : "0";
+    const label = document.createElement("span");
+    label.className = "stat-label";
+    label.textContent = pair[0];
+    d.appendChild(value);
+    d.appendChild(label);
     el.appendChild(d);
   });
 }
 
 function renderTrace(tbody, steps) {
   tbody.innerHTML = "";
-  steps.forEach(function (s, idx) {
+  steps.filter(function (s) {
+    return s && Array.isArray(s.stack) && Array.isArray(s.remaining_input);
+  }).forEach(function (s, idx) {
     const tr = document.createElement("tr");
     tr.setAttribute("data-idx", idx);
     const cls = ACTION_CLASS[s.action] || "init";
@@ -348,7 +407,7 @@ function stepTo(i) {
   tbody.querySelectorAll("tr").forEach(function (tr, idx) {
     tr.classList.toggle("active", idx === i);
   });
-  highlightDiagram();
+  syncSelectedStateToTrace();
 }
 
 function resetAll() {
@@ -364,5 +423,5 @@ function resetAll() {
     col.empty.style.display = "block";
   });
   playbackInfo.textContent = "—";
-  highlightDiagram();
+  syncSelectedStateToTrace();
 }

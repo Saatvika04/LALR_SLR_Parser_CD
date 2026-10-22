@@ -9,7 +9,7 @@
 <body>
   <header class="topbar">
     <h1>LALR vs SLR <span class="muted">· Parser Visualizer</span></h1>
-    <div class="mode-badge">Context: <strong id="mode-label">SLR</strong></div>
+    <div class="mode-badge">Automaton: <strong id="mode-label">SLR</strong> <span id="state-count"></span></div>
   </header>
 
   <main class="container">
@@ -17,7 +17,7 @@
     <!-- Source input -->
     <section class="card input-card">
       <h2>Source Input</h2>
-      <label for="mode">Context mode (grammar / table / diagram)</label>
+      <label for="mode">Automaton context</label>
       <select id="mode">
         <option value="slr" selected>SLR — arithmetic + assignment</option>
         <option value="lalr">LALR — full grammar (if/else)</option>
@@ -39,7 +39,7 @@
     <!-- Side-by-side comparison -->
     <div class="compare-grid">
       <section class="card compare-col">
-        <h2 class="col-title">SLR <span class="muted">arithmetic + assignment</span></h2>
+        <h2 class="col-title">SLR <span class="muted">arithmetic + assignment</span> <span id="slr-automaton-count" class="muted">(loading states)</span></h2>
         <div id="banner-slr" class="banner hidden"></div>
         <div class="cards" id="summary-slr"></div>
         <div class="table-wrap">
@@ -54,7 +54,7 @@
       </section>
 
       <section class="card compare-col">
-        <h2 class="col-title">LALR <span class="muted">full grammar</span></h2>
+        <h2 class="col-title">LALR <span class="muted">full grammar</span> <span id="lalr-automaton-count" class="muted">(loading states)</span></h2>
         <div id="banner-lalr" class="banner hidden"></div>
         <div class="cards" id="summary-lalr"></div>
         <div class="table-wrap">
@@ -71,7 +71,7 @@
 
     <!-- Conflict panel -->
     <section class="card" id="conflict-card">
-      <h2>Grammar Conflicts <span class="muted">(LALR)</span></h2>
+      <h2>LALR Grammar Conflicts</h2>
       <div id="conflicts"><p class="muted">No conflicts reported.</p></div>
     </section>
 
@@ -89,17 +89,22 @@
       </section>
     </div>
 
-    <!-- State diagram -->
-    <section class="card">
+    <section class="card state-details-card">
       <div class="trace-head">
-        <h2 id="diagram-title">State Diagram (SLR)</h2>
+        <h2 id="state-details-title">State Details</h2>
+        <div class="state-navigation">
+          <label for="state-select">Inspect state</label>
+          <select id="state-select" disabled>
+            <option value="">Loading automaton…</option>
+          </select>
+        </div>
         <div class="playback">
           <button id="prev" class="btn small">&#9664; Prev</button>
           <span id="playback-info">—</span>
           <button id="next" class="btn small">Next &#9654;</button>
         </div>
       </div>
-      <div id="diagram" class="diagram"></div>
+      <div id="state-details"><p class="muted">Choose a parser state or move through the trace to inspect LR items, actions, and gotos.</p></div>
     </section>
 
   </main>

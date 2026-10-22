@@ -7,13 +7,14 @@ from pathlib import Path
 import subprocess
 
 import lalr_automaton
-import slr_parser
 from flask import Flask, jsonify, render_template, request
 
 app = Flask(__name__)
 ROOT = Path(__file__).resolve().parent
 _parser_setting = Path(os.environ.get("LALR_PARSER", ROOT / "build" / "parser"))
 LALR_PARSER = _parser_setting if _parser_setting.is_absolute() else ROOT / _parser_setting
+_slr_parser_setting = Path(os.environ.get("SLR_PARSER", ROOT / "build" / "slr_parser"))
+SLR_PARSER = _slr_parser_setting if _slr_parser_setting.is_absolute() else ROOT / _slr_parser_setting
 
 SAMPLES = [
     {"label": "x = 10;", "input": "x = 10;"},
@@ -26,6 +27,7 @@ SAMPLES = [
 ]
 
 _LALR_REQUIRED = {"parser", "input", "tokens", "result", "error", "steps", "stats"}
+_SLR_REQUIRED = _LALR_REQUIRED
 
 
 def _unavailable_lalr(source, message):
@@ -77,6 +79,46 @@ def _run_lalr(source):
     return result, None
 
 
+def _run_slr(source):
+    """Run the native C SLR parser and validate its JSON contract."""
+    try:
+        completed = subprocess.run(
+            [str(SLR_PARSER), "--json"], input=source, text=True,
+            capture_output=True, cwd=ROOT, timeout=15, check=False,
+        )
+    except FileNotFoundError:
+        return None, ({"error": "SLR parser executable is missing; run `make` first."}, 503)
+    except subprocess.TimeoutExpired:
+        return None, ({"error": "SLR parser timed out."}, 504)
+    if completed.returncode != 0:
+        app.logger.error("SLR parser failed: %s", completed.stderr.strip())
+        return None, ({"error": "SLR parser execution failed; check the server log."}, 502)
+    try:
+        result = json.loads(completed.stdout)
+    except json.JSONDecodeError:
+        app.logger.error("SLR parser returned invalid JSON: %s", completed.stderr.strip())
+        return None, ({"error": "SLR parser returned an invalid response."}, 502)
+    if not _SLR_REQUIRED.issubset(result) or result.get("parser") != "SLR":
+        return None, ({"error": "SLR parser response did not match its JSON contract."}, 502)
+    return result, None
+
+
+def _run_slr_automaton():
+    try:
+        completed = subprocess.run(
+            [str(SLR_PARSER), "--automaton"], text=True,
+            capture_output=True, cwd=ROOT, timeout=15, check=False,
+        )
+    except (FileNotFoundError, subprocess.TimeoutExpired) as exc:
+        raise OSError("SLR parser executable is unavailable; run `make` first.") from exc
+    if completed.returncode != 0:
+        raise ValueError("SLR parser could not construct its automaton.")
+    try:
+        return json.loads(completed.stdout)
+    except json.JSONDecodeError as exc:
+        raise ValueError("SLR parser returned an invalid automaton response.") from exc
+
+
 @app.route("/")
 def index():
     return render_template("index.html", samples=SAMPLES)
@@ -99,7 +141,10 @@ def parse():
         return jsonify(result)
     if mode != "slr":
         return jsonify({"error": "mode must be 'slr' or 'lalr'"}), 400
-    return jsonify(slr_parser.parse(source))
+    result, err = _run_slr(source)
+    if err is not None:
+        return jsonify(err[0]), err[1]
+    return jsonify(result)
 
 
 @app.route("/compare", methods=["POST"])
@@ -109,7 +154,13 @@ def compare():
     if not isinstance(source, str):
         return jsonify({"error": "input must be a string"}), 400
 
-    slr = slr_parser.parse(source)
+    slr, slr_err = _run_slr(source)
+    if slr_err is not None:
+        slr = {
+            "parser": "SLR", "input": source, "tokens": [], "result": "UNAVAILABLE",
+            "error": slr_err[0]["error"], "steps": [],
+            "stats": {"token_count": 0, "total_steps": 0, "shifts": 0, "reductions": 0, "errors": 0},
+        }
     lalr, err = _run_lalr(source)
     if err is not None:
         # Degrade gracefully: keep the SLR result and mark LALR unavailable.
@@ -129,7 +180,11 @@ def automaton():
         except (OSError, ValueError, KeyError) as exc:
             app.logger.error("Unable to load LALR automaton: %s", exc)
             return jsonify({"error": "LALR automaton report is unavailable; run `make` first."}), 503
-    return jsonify(slr_parser.build_automaton())
+    try:
+        return jsonify(_run_slr_automaton())
+    except (OSError, ValueError) as exc:
+        app.logger.error("Unable to load SLR automaton: %s", exc)
+        return jsonify({"error": "SLR automaton is unavailable; run `make` first."}), 503
 
 
 if __name__ == "__main__":

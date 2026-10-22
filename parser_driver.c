@@ -38,33 +38,9 @@ typedef struct {
     const char *text;
 } Production;
 
-static const Production productions[] = {
-    {"", {NULL}, 0, ""},
-    {"program", {"statements", NULL}, 1, "program -> statements"},
-    {"statements", {"statements", "statement", NULL}, 2, "statements -> statements statement"},
-    {"statements", {"statement", NULL}, 1, "statements -> statement"},
-    {"statement", {"assignment", NULL}, 1, "statement -> assignment"},
-    {"statement", {"conditional", NULL}, 1, "statement -> conditional"},
-    {"assignment", {"ID", "ASSIGN", "expression", "SEMICOLON", NULL}, 4, "assignment -> ID ASSIGN expression SEMICOLON"},
-    {"expression", {"expression", "PLUS", "term", NULL}, 3, "expression -> expression PLUS term"},
-    {"expression", {"expression", "MINUS", "term", NULL}, 3, "expression -> expression MINUS term"},
-    {"expression", {"term", NULL}, 1, "expression -> term"},
-    {"term", {"term", "MULT", "factor", NULL}, 3, "term -> term MULT factor"},
-    {"term", {"term", "DIV", "factor", NULL}, 3, "term -> term DIV factor"},
-    {"term", {"factor", NULL}, 1, "term -> factor"},
-    {"factor", {"ID", NULL}, 1, "factor -> ID"},
-    {"factor", {"NUM", NULL}, 1, "factor -> NUM"},
-    {"factor", {"LPAREN", "expression", "RPAREN", NULL}, 3, "factor -> LPAREN expression RPAREN"},
-    {"conditional", {"IF", "LPAREN", "condition", "RPAREN", "statement", NULL}, 5, "conditional -> IF LPAREN condition RPAREN statement"},
-    {"conditional", {"IF", "LPAREN", "condition", "RPAREN", "statement", "ELSE", "statement"}, 7, "conditional -> IF LPAREN condition RPAREN statement ELSE statement"},
-    {"condition", {"expression", "relational_operator", "expression", NULL}, 3, "condition -> expression relational_operator expression"},
-    {"relational_operator", {"LT", NULL}, 1, "relational_operator -> LT"},
-    {"relational_operator", {"GT", NULL}, 1, "relational_operator -> GT"},
-    {"relational_operator", {"LE", NULL}, 1, "relational_operator -> LE"},
-    {"relational_operator", {"GE", NULL}, 1, "relational_operator -> GE"},
-    {"relational_operator", {"EQ", NULL}, 1, "relational_operator -> EQ"},
-    {"relational_operator", {"NE", NULL}, 1, "relational_operator -> NE"},
-};
+#define GENERATE_LALR_PRODUCTION_METADATA
+#include "slr_grammar.generated.h"
+#undef GENERATE_LALR_PRODUCTION_METADATA
 
 typedef enum { INIT, SHIFT, REDUCE, ACCEPT, ERROR } Action;
 

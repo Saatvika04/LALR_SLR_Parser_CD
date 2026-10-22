@@ -9,10 +9,12 @@ PARSER_H := $(BUILD_DIR)/lalr_parser.tab.h
 LEXER_C := $(BUILD_DIR)/lex.yy.c
 PARSER_BIN := $(BUILD_DIR)/parser
 LEXER_BIN := $(BUILD_DIR)/lexer
+SLR_BIN := $(BUILD_DIR)/slr_parser
+SLR_GRAMMAR_H := $(BUILD_DIR)/slr_grammar.generated.h
 
 .PHONY: all test traces clean parser lexer
 
-all: $(PARSER_BIN) $(LEXER_BIN) lalr_parser.output parser lexer
+all: $(PARSER_BIN) $(LEXER_BIN) $(SLR_BIN) lalr_parser.output parser lexer
 
 $(BUILD_DIR):
 	mkdir -p $@
@@ -30,11 +32,17 @@ lalr_parser.output: $(BUILD_DIR)/.bison.stamp
 $(LEXER_C): lexer.l $(PARSER_H) | $(BUILD_DIR)
 	$(FLEX) -o $@ $<
 
-$(PARSER_BIN): parser_driver.c $(PARSER_C) $(PARSER_H) $(LEXER_C)
+$(PARSER_BIN): parser_driver.c $(PARSER_C) $(PARSER_H) $(LEXER_C) $(SLR_GRAMMAR_H)
 	$(CC) $(CFLAGS) -I$(BUILD_DIR) parser_driver.c $(PARSER_C) $(LEXER_C) -o $@
 
 $(LEXER_BIN): lexer_driver.c $(PARSER_H) $(LEXER_C)
 	$(CC) $(CFLAGS) -I$(BUILD_DIR) lexer_driver.c $(LEXER_C) -o $@
+
+$(SLR_GRAMMAR_H): lalr_parser.y tools/generate_slr_grammar.py | $(BUILD_DIR)
+	python3 tools/generate_slr_grammar.py lalr_parser.y $@
+
+$(SLR_BIN): slr_parser.c $(SLR_GRAMMAR_H) $(PARSER_H) $(LEXER_C)
+	$(CC) $(CFLAGS) -I$(BUILD_DIR) slr_parser.c $(LEXER_C) -o $@
 
 parser: $(PARSER_BIN)
 	@if [ -e parser ]; then echo "Keeping existing ./parser; use $(PARSER_BIN) for this build"; else ln -s $(PARSER_BIN) parser; fi
@@ -45,7 +53,7 @@ lexer: $(LEXER_BIN)
 test: all
 	python3 tests/test_lalr_trace.py --parser $(PARSER_BIN)
 	python3 tests/test_lalr_automaton.py
-	python3 tests/test_slr_parser.py
+	python3 tests/test_slr_parser.py --parser $(SLR_BIN)
 	python3 tests/test_flask_integration.py
 	bash test_lexer.sh
 
