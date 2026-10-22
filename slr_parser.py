@@ -341,7 +341,7 @@ def parse(source):
 
 
 # --------------------------------------------------------------------------
-# Automaton / table export (for the parsing-table and state-diagram panels)
+# Automaton / table export for the parsing table and CLI output
 # --------------------------------------------------------------------------
 def build_automaton():
     first = compute_first()

@@ -1,5 +1,5 @@
 #include <stdio.h>
-#include "lalr_parser.tab.h"
+#include <lalr_parser.tab.h>
 
 int yylex(void);
 extern char *yytext;
@@ -64,6 +64,9 @@ int main(void)
                 break;
             case SEMICOLON:
                 printf("SEMICOLON(%s)\n", yytext);
+                break;
+            case INVALID:
+                printf("INVALID(%s)\n", yytext);
                 break;
             default:
                 printf("UNKNOWN(%s)\n", yytext);

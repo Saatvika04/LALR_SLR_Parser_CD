@@ -20,3 +20,4 @@
 | LPAREN | `(` | `(` |
 | RPAREN | `)` | `)` |
 | SEMICOLON | `;` | `;` |
+| INVALID | any otherwise unrecognized character | `@` |

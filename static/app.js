@@ -39,19 +39,20 @@ const tbody = document.querySelector("#trace-table tbody");
 const emptyTrace = $("empty-trace");
 const grammarEl = $("grammar");
 const parseTable = $("parse-table");
-const diagram = $("diagram");
 const playbackInfo = $("playback-info");
 const modeLabel = $("mode-label");
 
 // ---------------------------------------------------------------------------
 // Init
 // ---------------------------------------------------------------------------
-renderGrammar();
 loadAutomaton();
 
 modeSel.addEventListener("change", function () {
   state.mode = modeSel.value;
   modeLabel.textContent = modeSel.value.toUpperCase();
+  $("grammar-title").textContent = "Grammar (" + modeSel.value.toUpperCase() + " mode)";
+  $("table-title").textContent = modeSel.value.toUpperCase() + " Parsing Table";
+  loadAutomaton();
 });
 sampleSel.addEventListener("change", function () {
   if (sampleSel.value !== "") sourceEl.value = sampleSel.value;
@@ -64,15 +65,22 @@ $("next").addEventListener("click", function () { stepTo(state.current + 1); });
 // ---------------------------------------------------------------------------
 // Grammar + automaton
 // ---------------------------------------------------------------------------
-function renderGrammar() {
-  grammarEl.textContent = GRAMMAR.join("\n");
+function renderGrammar(grammar) {
+  grammarEl.textContent = (grammar || GRAMMAR).join("\n");
 }
 
 async function loadAutomaton() {
-  const res = await fetch("/automaton");
-  state.automaton = await res.json();
-  renderParseTable(state.automaton);
-  renderDiagram(state.automaton);
+  try {
+    const res = await fetch("/automaton?mode=" + encodeURIComponent(state.mode));
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Automaton could not be loaded.");
+    state.automaton = data;
+    renderGrammar(data.grammar);
+    renderParseTable(data);
+  } catch (err) {
+    state.automaton = null;
+    parseTable.textContent = err.message;
+  }
 }
 
 function renderParseTable(a) {
@@ -104,91 +112,6 @@ function renderParseTable(a) {
 }
 
 // ---------------------------------------------------------------------------
-// State diagram (simple circular layout)
-// ---------------------------------------------------------------------------
-const SVG_NS = "http://www.w3.org/2000/svg";
-
-function renderDiagram(a) {
-  const states = a.states;
-  const n = states.length;
-  const W = 900, H = 900;
-  const cx = W / 2, cy = H / 2;
-  const R = Math.min(cx, cy) - 100;
-
-  const svg = document.createElementNS(SVG_NS, "svg");
-  svg.setAttribute("viewBox", "0 0 " + W + " " + H);
-  svg.setAttribute("class", "state-diagram");
-
-  const pos = {};
-  states.forEach(function (st, i) {
-    const ang = (2 * Math.PI * i) / n - Math.PI / 2;
-    pos[st.id] = { x: cx + R * Math.cos(ang), y: cy + R * Math.sin(ang) };
-  });
-
-  const defs = document.createElementNS(SVG_NS, "defs");
-  defs.innerHTML =
-    '<marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">' +
-    '<path d="M 0 0 L 10 5 L 0 10 z" fill="#94a3b8"/></marker>';
-  svg.appendChild(defs);
-
-  states.forEach(function (st) {
-    st.actions.forEach(function (act) {
-      if (act.action === "shift") addEdge(svg, pos, st.id, act.to, act.symbol, "shift");
-    });
-    st.gotos.forEach(function (g) {
-      addEdge(svg, pos, st.id, g.to, g.symbol, "goto");
-    });
-  });
-
-  states.forEach(function (st) {
-    const p = pos[st.id];
-    const g = document.createElementNS(SVG_NS, "g");
-    g.setAttribute("class", "node-group");
-    g.setAttribute("data-state", st.id);
-    g.innerHTML =
-      '<circle cx="' + p.x + '" cy="' + p.y + '" r="22" class="node"/>' +
-      '<text x="' + p.x + '" y="' + (p.y + 5) + '" class="node-label" text-anchor="middle">' + st.id + "</text>";
-    svg.appendChild(g);
-  });
-
-  diagram.innerHTML = "";
-  diagram.appendChild(svg);
-}
-
-function addEdge(svg, pos, from, to, label, kind) {
-  const a = pos[from], b = pos[to];
-  const dx = b.x - a.x, dy = b.y - a.y;
-  const len = Math.hypot(dx, dy);
-  if (len < 1) return; // skip self-loops for now
-  const off = 24;
-  const sx = a.x + (dx / len) * off, sy = a.y + (dy / len) * off;
-  const ex = b.x - (dx / len) * (off + 8), ey = b.y - (dy / len) * (off + 8);
-
-  const line = document.createElementNS(SVG_NS, "line");
-  line.setAttribute("x1", sx); line.setAttribute("y1", sy);
-  line.setAttribute("x2", ex); line.setAttribute("y2", ey);
-  line.setAttribute("class", "edge " + kind);
-  line.setAttribute("marker-end", "url(#arrow)");
-  svg.appendChild(line);
-
-  const mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2;
-  const t = document.createElementNS(SVG_NS, "text");
-  t.setAttribute("x", mx); t.setAttribute("y", my - 6);
-  t.setAttribute("class", "edge-label");
-  t.setAttribute("text-anchor", "middle");
-  t.textContent = label;
-  svg.appendChild(t);
-}
-
-function highlightDiagram() {
-  if (!state.automaton) return;
-  const s = (state.current >= 0 && state.steps[state.current]) ? state.steps[state.current].state : -1;
-  diagram.querySelectorAll(".node-group").forEach(function (g) {
-    g.classList.toggle("active", parseInt(g.getAttribute("data-state"), 10) === s);
-  });
-}
-
-// ---------------------------------------------------------------------------
 // Parse + rendering
 // ---------------------------------------------------------------------------
 async function runParse() {
@@ -213,6 +136,9 @@ function renderBanner(data) {
   } else if (data.result === "SYNTAX ERROR") {
     banner.classList.add("bad");
     banner.textContent = "SYNTAX ERROR" + (data.error ? " — " + data.error : "");
+  } else if (!data.result) {
+    banner.classList.add("warn");
+    banner.textContent = "PARSER UNAVAILABLE" + (data.error ? " — " + data.error : "");
   } else {
     banner.classList.add("warn");
     banner.textContent = data.result + (data.error ? " — " + data.error : "");
@@ -263,7 +189,6 @@ function stepTo(i) {
   const row = document.querySelector('#trace-table tbody tr[data-idx="' + i + '"]');
   if (row) row.scrollIntoView({ block: "nearest" });
   playbackInfo.textContent = "Step " + i + " / " + (state.steps.length - 1);
-  highlightDiagram();
 }
 
 function resetAll() {
@@ -275,5 +200,4 @@ function resetAll() {
   state.steps = [];
   state.current = -1;
   playbackInfo.textContent = "—";
-  highlightDiagram();
 }

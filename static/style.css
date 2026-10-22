@@ -149,9 +149,6 @@ tr.active { background: #eff6ff; outline: 1px solid #bfdbfe; }
 .tag.error { background: #fee2e2; color: #991b1b; }
 .prod { color: var(--muted); font-size: 11px; margin-left: 6px; font-family: ui-monospace, Consolas, monospace; }
 
-.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-@media (max-width: 800px) { .grid-2 { grid-template-columns: 1fr; } }
-
 pre {
   background: #f8fafc;
   border: 1px solid var(--border);
@@ -168,16 +165,6 @@ pre {
 #parse-table td.accept { color: #166534; font-weight: 700; }
 #parse-table td.nt { color: #7c3aed; }
 #parse-table th.nt { color: #7c3aed; }
-
-.diagram { overflow-x: auto; }
-.state-diagram { display: block; margin: 0 auto; }
-.node-group .node { fill: #e2e8f0; stroke: #64748b; stroke-width: 1.5; }
-.node-group .node-label { font-size: 12px; fill: #0f172a; font-weight: 600; pointer-events: none; }
-.node-group.active .node { fill: #2563eb; stroke: #1e40af; }
-.node-group.active .node-label { fill: #ffffff; }
-.edge { stroke: #cbd5e1; stroke-width: 1.2; }
-.edge.shift { stroke: #94a3b8; }
-.edge.goto { stroke: #cbd5e1; stroke-dasharray: 3 3; }
-.edge-label { font-size: 9px; fill: #64748b; }
+#parse-table { width: max-content; min-width: 100%; }
 
 .muted { color: var(--muted); }

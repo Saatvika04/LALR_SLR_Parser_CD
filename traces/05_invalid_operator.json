@@ -1,0 +1,269 @@
+{
+  "parser": "LALR",
+  "input": "x = 10 + * 20;",
+  "tokens": [
+    {
+      "type": "ID",
+      "lexeme": "x"
+    },
+    {
+      "type": "ASSIGN",
+      "lexeme": "="
+    },
+    {
+      "type": "NUM",
+      "lexeme": "10"
+    },
+    {
+      "type": "PLUS",
+      "lexeme": "+"
+    },
+    {
+      "type": "MULT",
+      "lexeme": "*"
+    },
+    {
+      "type": "NUM",
+      "lexeme": "20"
+    },
+    {
+      "type": "SEMICOLON",
+      "lexeme": ";"
+    }
+  ],
+  "result": "SYNTAX ERROR",
+  "error": "Unexpected token MULT ('*')",
+  "steps": [
+    {
+      "step": 0,
+      "stack": [
+        "0"
+      ],
+      "remaining_input": [
+        "x",
+        "=",
+        "10",
+        "+",
+        "*",
+        "20",
+        ";",
+        "$"
+      ],
+      "action": "INIT",
+      "state": 0,
+      "token": null,
+      "production": null,
+      "goto_state": null
+    },
+    {
+      "step": 1,
+      "stack": [
+        "0",
+        "ID",
+        "2"
+      ],
+      "remaining_input": [
+        "=",
+        "10",
+        "+",
+        "*",
+        "20",
+        ";",
+        "$"
+      ],
+      "action": "SHIFT",
+      "state": 2,
+      "token": {
+        "type": "ID",
+        "lexeme": "x"
+      },
+      "production": null,
+      "goto_state": null
+    },
+    {
+      "step": 2,
+      "stack": [
+        "0",
+        "ID",
+        "2",
+        "ASSIGN",
+        "9"
+      ],
+      "remaining_input": [
+        "10",
+        "+",
+        "*",
+        "20",
+        ";",
+        "$"
+      ],
+      "action": "SHIFT",
+      "state": 9,
+      "token": {
+        "type": "ASSIGN",
+        "lexeme": "="
+      },
+      "production": null,
+      "goto_state": null
+    },
+    {
+      "step": 3,
+      "stack": [
+        "0",
+        "ID",
+        "2",
+        "ASSIGN",
+        "9",
+        "NUM",
+        "13"
+      ],
+      "remaining_input": [
+        "+",
+        "*",
+        "20",
+        ";",
+        "$"
+      ],
+      "action": "SHIFT",
+      "state": 13,
+      "token": {
+        "type": "NUM",
+        "lexeme": "10"
+      },
+      "production": null,
+      "goto_state": null
+    },
+    {
+      "step": 4,
+      "stack": [
+        "0",
+        "ID",
+        "2",
+        "ASSIGN",
+        "9",
+        "factor",
+        "17"
+      ],
+      "remaining_input": [
+        "+",
+        "*",
+        "20",
+        ";",
+        "$"
+      ],
+      "action": "REDUCE",
+      "state": 17,
+      "token": null,
+      "production": "factor -> NUM",
+      "goto_state": 17
+    },
+    {
+      "step": 5,
+      "stack": [
+        "0",
+        "ID",
+        "2",
+        "ASSIGN",
+        "9",
+        "term",
+        "16"
+      ],
+      "remaining_input": [
+        "+",
+        "*",
+        "20",
+        ";",
+        "$"
+      ],
+      "action": "REDUCE",
+      "state": 16,
+      "token": null,
+      "production": "term -> factor",
+      "goto_state": 16
+    },
+    {
+      "step": 6,
+      "stack": [
+        "0",
+        "ID",
+        "2",
+        "ASSIGN",
+        "9",
+        "expression",
+        "19"
+      ],
+      "remaining_input": [
+        "+",
+        "*",
+        "20",
+        ";",
+        "$"
+      ],
+      "action": "REDUCE",
+      "state": 19,
+      "token": null,
+      "production": "expression -> term",
+      "goto_state": 19
+    },
+    {
+      "step": 7,
+      "stack": [
+        "0",
+        "ID",
+        "2",
+        "ASSIGN",
+        "9",
+        "expression",
+        "19",
+        "PLUS",
+        "21"
+      ],
+      "remaining_input": [
+        "*",
+        "20",
+        ";",
+        "$"
+      ],
+      "action": "SHIFT",
+      "state": 21,
+      "token": {
+        "type": "PLUS",
+        "lexeme": "+"
+      },
+      "production": null,
+      "goto_state": null
+    },
+    {
+      "step": 8,
+      "stack": [
+        "0",
+        "ID",
+        "2",
+        "ASSIGN",
+        "9",
+        "expression",
+        "19",
+        "PLUS",
+        "21"
+      ],
+      "remaining_input": [
+        "*",
+        "20",
+        ";",
+        "$"
+      ],
+      "action": "ERROR",
+      "state": 21,
+      "token": null,
+      "production": null,
+      "goto_state": null
+    }
+  ],
+  "stats": {
+    "token_count": 7,
+    "total_steps": 9,
+    "shifts": 4,
+    "reductions": 3,
+    "errors": 1
+  }
+}

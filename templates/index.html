@@ -68,24 +68,16 @@
       <p id="empty-trace" class="muted">Run a parse to see the step-by-step trace.</p>
     </section>
 
-    <!-- Grammar + parsing table -->
-    <div class="grid-2">
-      <section class="card">
-        <h2>Grammar <span class="muted">(SLR mode)</span></h2>
-        <pre id="grammar"></pre>
-      </section>
-      <section class="card">
-        <h2>SLR Parsing Table</h2>
-        <div class="table-wrap">
-          <table id="parse-table"></table>
-        </div>
-      </section>
-    </div>
-
-    <!-- State diagram -->
     <section class="card">
-      <h2>State Diagram</h2>
-      <div id="diagram" class="diagram"></div>
+      <h2 id="grammar-title">Grammar (SLR mode)</h2>
+      <pre id="grammar"></pre>
+    </section>
+
+    <section class="card">
+      <h2 id="table-title">SLR Parsing Table</h2>
+      <div class="table-wrap">
+        <table id="parse-table"></table>
+      </div>
     </section>
 
   </main>
