@@ -60,4 +60,4 @@ After building and installing Flask, run:
 python3 app.py
 ```
 
-The `/parse` endpoint keeps the existing SLR behavior and sends LALR requests to `build/parser --json` using an argument list and stdin (no shell command interpolation). `/automaton?mode=slr` keeps the existing SLR table; `/automaton?mode=lalr` adapts `lalr_parser.output` to the frontend's table and state-diagram format. Set `LALR_PARSER` to an alternate parser executable if needed. The frontend reloads the grammar, table, and diagram when parsing mode changes.
+The `/parse` endpoint keeps the existing SLR behavior and sends LALR requests to `build/parser --json` using an argument list and stdin (no shell command interpolation). `/automaton?mode=slr` keeps the existing SLR table; `/automaton?mode=lalr` adapts `lalr_parser.output` to the frontend's parsing table. Set `LALR_PARSER` to an alternate parser executable if needed. The frontend reloads the grammar and parsing table when parsing mode changes.
