@@ -7,6 +7,7 @@
 digit   [0-9]
 letter  [a-zA-Z_]
 id      {letter}({letter}|{digit})*
+utf8char ([\xC2-\xDF][\x80-\xBF]|[\xE0][\xA0-\xBF][\x80-\xBF]|[\xE1-\xEC\xEE\xEF][\x80-\xBF]{2}|[\xED][\x80-\x9F][\x80-\xBF]|[\xF0][\x90-\xBF][\x80-\xBF]{2}|[\xF1-\xF3][\x80-\xBF]{3}|[\xF4][\x80-\x8F][\x80-\xBF]{2})
 
 %%
 
@@ -29,6 +30,7 @@ id      {letter}({letter}|{digit})*
 "("          { return LPAREN; }
 ")"          { return RPAREN; }
 ";"          { return SEMICOLON; }
-.            { fprintf(stderr, "LEXICAL ERROR: unexpected character '%s'\n", yytext); }
+{utf8char}   { return INVALID; }
+.            { return INVALID; }
 
 %%

@@ -1,0 +1,44 @@
+{
+  "parser": "LALR",
+  "input": "",
+  "tokens": [],
+  "result": "SYNTAX ERROR",
+  "error": "Syntax error at end of input",
+  "steps": [
+    {
+      "step": 0,
+      "stack": [
+        "0"
+      ],
+      "remaining_input": [
+        "$"
+      ],
+      "action": "INIT",
+      "state": 0,
+      "token": null,
+      "production": null,
+      "goto_state": null
+    },
+    {
+      "step": 1,
+      "stack": [
+        "0"
+      ],
+      "remaining_input": [
+        "$"
+      ],
+      "action": "ERROR",
+      "state": 0,
+      "token": null,
+      "production": null,
+      "goto_state": null
+    }
+  ],
+  "stats": {
+    "token_count": 0,
+    "total_steps": 2,
+    "shifts": 0,
+    "reductions": 0,
+    "errors": 1
+  }
+}

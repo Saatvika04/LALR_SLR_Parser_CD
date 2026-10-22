@@ -1,0 +1,585 @@
+{
+  "parser": "LALR",
+  "input": "x = 10 + 20 * 3;",
+  "tokens": [
+    {
+      "type": "ID",
+      "lexeme": "x"
+    },
+    {
+      "type": "ASSIGN",
+      "lexeme": "="
+    },
+    {
+      "type": "NUM",
+      "lexeme": "10"
+    },
+    {
+      "type": "PLUS",
+      "lexeme": "+"
+    },
+    {
+      "type": "NUM",
+      "lexeme": "20"
+    },
+    {
+      "type": "MULT",
+      "lexeme": "*"
+    },
+    {
+      "type": "NUM",
+      "lexeme": "3"
+    },
+    {
+      "type": "SEMICOLON",
+      "lexeme": ";"
+    }
+  ],
+  "result": "ACCEPTED",
+  "error": null,
+  "steps": [
+    {
+      "step": 0,
+      "stack": [
+        "0"
+      ],
+      "remaining_input": [
+        "x",
+        "=",
+        "10",
+        "+",
+        "20",
+        "*",
+        "3",
+        ";",
+        "$"
+      ],
+      "action": "INIT",
+      "state": 0,
+      "token": null,
+      "production": null,
+      "goto_state": null
+    },
+    {
+      "step": 1,
+      "stack": [
+        "0",
+        "ID",
+        "2"
+      ],
+      "remaining_input": [
+        "=",
+        "10",
+        "+",
+        "20",
+        "*",
+        "3",
+        ";",
+        "$"
+      ],
+      "action": "SHIFT",
+      "state": 2,
+      "token": {
+        "type": "ID",
+        "lexeme": "x"
+      },
+      "production": null,
+      "goto_state": null
+    },
+    {
+      "step": 2,
+      "stack": [
+        "0",
+        "ID",
+        "2",
+        "ASSIGN",
+        "9"
+      ],
+      "remaining_input": [
+        "10",
+        "+",
+        "20",
+        "*",
+        "3",
+        ";",
+        "$"
+      ],
+      "action": "SHIFT",
+      "state": 9,
+      "token": {
+        "type": "ASSIGN",
+        "lexeme": "="
+      },
+      "production": null,
+      "goto_state": null
+    },
+    {
+      "step": 3,
+      "stack": [
+        "0",
+        "ID",
+        "2",
+        "ASSIGN",
+        "9",
+        "NUM",
+        "13"
+      ],
+      "remaining_input": [
+        "+",
+        "20",
+        "*",
+        "3",
+        ";",
+        "$"
+      ],
+      "action": "SHIFT",
+      "state": 13,
+      "token": {
+        "type": "NUM",
+        "lexeme": "10"
+      },
+      "production": null,
+      "goto_state": null
+    },
+    {
+      "step": 4,
+      "stack": [
+        "0",
+        "ID",
+        "2",
+        "ASSIGN",
+        "9",
+        "factor",
+        "17"
+      ],
+      "remaining_input": [
+        "+",
+        "20",
+        "*",
+        "3",
+        ";",
+        "$"
+      ],
+      "action": "REDUCE",
+      "state": 17,
+      "token": null,
+      "production": "factor -> NUM",
+      "goto_state": 17
+    },
+    {
+      "step": 5,
+      "stack": [
+        "0",
+        "ID",
+        "2",
+        "ASSIGN",
+        "9",
+        "term",
+        "16"
+      ],
+      "remaining_input": [
+        "+",
+        "20",
+        "*",
+        "3",
+        ";",
+        "$"
+      ],
+      "action": "REDUCE",
+      "state": 16,
+      "token": null,
+      "production": "term -> factor",
+      "goto_state": 16
+    },
+    {
+      "step": 6,
+      "stack": [
+        "0",
+        "ID",
+        "2",
+        "ASSIGN",
+        "9",
+        "expression",
+        "19"
+      ],
+      "remaining_input": [
+        "+",
+        "20",
+        "*",
+        "3",
+        ";",
+        "$"
+      ],
+      "action": "REDUCE",
+      "state": 19,
+      "token": null,
+      "production": "expression -> term",
+      "goto_state": 19
+    },
+    {
+      "step": 7,
+      "stack": [
+        "0",
+        "ID",
+        "2",
+        "ASSIGN",
+        "9",
+        "expression",
+        "19",
+        "PLUS",
+        "21"
+      ],
+      "remaining_input": [
+        "20",
+        "*",
+        "3",
+        ";",
+        "$"
+      ],
+      "action": "SHIFT",
+      "state": 21,
+      "token": {
+        "type": "PLUS",
+        "lexeme": "+"
+      },
+      "production": null,
+      "goto_state": null
+    },
+    {
+      "step": 8,
+      "stack": [
+        "0",
+        "ID",
+        "2",
+        "ASSIGN",
+        "9",
+        "expression",
+        "19",
+        "PLUS",
+        "21",
+        "NUM",
+        "13"
+      ],
+      "remaining_input": [
+        "*",
+        "3",
+        ";",
+        "$"
+      ],
+      "action": "SHIFT",
+      "state": 13,
+      "token": {
+        "type": "NUM",
+        "lexeme": "20"
+      },
+      "production": null,
+      "goto_state": null
+    },
+    {
+      "step": 9,
+      "stack": [
+        "0",
+        "ID",
+        "2",
+        "ASSIGN",
+        "9",
+        "expression",
+        "19",
+        "PLUS",
+        "21",
+        "factor",
+        "17"
+      ],
+      "remaining_input": [
+        "*",
+        "3",
+        ";",
+        "$"
+      ],
+      "action": "REDUCE",
+      "state": 17,
+      "token": null,
+      "production": "factor -> NUM",
+      "goto_state": 17
+    },
+    {
+      "step": 10,
+      "stack": [
+        "0",
+        "ID",
+        "2",
+        "ASSIGN",
+        "9",
+        "expression",
+        "19",
+        "PLUS",
+        "21",
+        "term",
+        "35"
+      ],
+      "remaining_input": [
+        "*",
+        "3",
+        ";",
+        "$"
+      ],
+      "action": "REDUCE",
+      "state": 35,
+      "token": null,
+      "production": "term -> factor",
+      "goto_state": 35
+    },
+    {
+      "step": 11,
+      "stack": [
+        "0",
+        "ID",
+        "2",
+        "ASSIGN",
+        "9",
+        "expression",
+        "19",
+        "PLUS",
+        "21",
+        "term",
+        "35",
+        "MULT",
+        "30"
+      ],
+      "remaining_input": [
+        "3",
+        ";",
+        "$"
+      ],
+      "action": "SHIFT",
+      "state": 30,
+      "token": {
+        "type": "MULT",
+        "lexeme": "*"
+      },
+      "production": null,
+      "goto_state": null
+    },
+    {
+      "step": 12,
+      "stack": [
+        "0",
+        "ID",
+        "2",
+        "ASSIGN",
+        "9",
+        "expression",
+        "19",
+        "PLUS",
+        "21",
+        "term",
+        "35",
+        "MULT",
+        "30",
+        "NUM",
+        "13"
+      ],
+      "remaining_input": [
+        ";",
+        "$"
+      ],
+      "action": "SHIFT",
+      "state": 13,
+      "token": {
+        "type": "NUM",
+        "lexeme": "3"
+      },
+      "production": null,
+      "goto_state": null
+    },
+    {
+      "step": 13,
+      "stack": [
+        "0",
+        "ID",
+        "2",
+        "ASSIGN",
+        "9",
+        "expression",
+        "19",
+        "PLUS",
+        "21",
+        "term",
+        "35",
+        "MULT",
+        "30",
+        "factor",
+        "38"
+      ],
+      "remaining_input": [
+        ";",
+        "$"
+      ],
+      "action": "REDUCE",
+      "state": 38,
+      "token": null,
+      "production": "factor -> NUM",
+      "goto_state": 38
+    },
+    {
+      "step": 14,
+      "stack": [
+        "0",
+        "ID",
+        "2",
+        "ASSIGN",
+        "9",
+        "expression",
+        "19",
+        "PLUS",
+        "21",
+        "term",
+        "35"
+      ],
+      "remaining_input": [
+        ";",
+        "$"
+      ],
+      "action": "REDUCE",
+      "state": 35,
+      "token": null,
+      "production": "term -> term MULT factor",
+      "goto_state": 35
+    },
+    {
+      "step": 15,
+      "stack": [
+        "0",
+        "ID",
+        "2",
+        "ASSIGN",
+        "9",
+        "expression",
+        "19"
+      ],
+      "remaining_input": [
+        ";",
+        "$"
+      ],
+      "action": "REDUCE",
+      "state": 19,
+      "token": null,
+      "production": "expression -> expression PLUS term",
+      "goto_state": 19
+    },
+    {
+      "step": 16,
+      "stack": [
+        "0",
+        "ID",
+        "2",
+        "ASSIGN",
+        "9",
+        "expression",
+        "19",
+        "SEMICOLON",
+        "33"
+      ],
+      "remaining_input": [
+        "$"
+      ],
+      "action": "SHIFT",
+      "state": 33,
+      "token": {
+        "type": "SEMICOLON",
+        "lexeme": ";"
+      },
+      "production": null,
+      "goto_state": null
+    },
+    {
+      "step": 17,
+      "stack": [
+        "0",
+        "assignment",
+        "6"
+      ],
+      "remaining_input": [
+        "$"
+      ],
+      "action": "REDUCE",
+      "state": 6,
+      "token": null,
+      "production": "assignment -> ID ASSIGN expression SEMICOLON",
+      "goto_state": 6
+    },
+    {
+      "step": 18,
+      "stack": [
+        "0",
+        "statement",
+        "5"
+      ],
+      "remaining_input": [
+        "$"
+      ],
+      "action": "REDUCE",
+      "state": 5,
+      "token": null,
+      "production": "statement -> assignment",
+      "goto_state": 5
+    },
+    {
+      "step": 19,
+      "stack": [
+        "0",
+        "statements",
+        "4"
+      ],
+      "remaining_input": [
+        "$"
+      ],
+      "action": "REDUCE",
+      "state": 4,
+      "token": null,
+      "production": "statements -> statement",
+      "goto_state": 4
+    },
+    {
+      "step": 20,
+      "stack": [
+        "0",
+        "program",
+        "3"
+      ],
+      "remaining_input": [
+        "$"
+      ],
+      "action": "REDUCE",
+      "state": 3,
+      "token": null,
+      "production": "program -> statements",
+      "goto_state": 3
+    },
+    {
+      "step": 21,
+      "stack": [
+        "0",
+        "program",
+        "3",
+        "$",
+        "10"
+      ],
+      "remaining_input": [
+        "$"
+      ],
+      "action": "ACCEPT",
+      "state": 10,
+      "token": null,
+      "production": null,
+      "goto_state": null
+    }
+  ],
+  "stats": {
+    "token_count": 8,
+    "total_steps": 22,
+    "shifts": 8,
+    "reductions": 12,
+    "errors": 0
+  }
+}

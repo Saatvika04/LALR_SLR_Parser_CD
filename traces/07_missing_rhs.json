@@ -1,0 +1,108 @@
+{
+  "parser": "LALR",
+  "input": "x = ;",
+  "tokens": [
+    {
+      "type": "ID",
+      "lexeme": "x"
+    },
+    {
+      "type": "ASSIGN",
+      "lexeme": "="
+    },
+    {
+      "type": "SEMICOLON",
+      "lexeme": ";"
+    }
+  ],
+  "result": "SYNTAX ERROR",
+  "error": "Unexpected token SEMICOLON (';')",
+  "steps": [
+    {
+      "step": 0,
+      "stack": [
+        "0"
+      ],
+      "remaining_input": [
+        "x",
+        "=",
+        ";",
+        "$"
+      ],
+      "action": "INIT",
+      "state": 0,
+      "token": null,
+      "production": null,
+      "goto_state": null
+    },
+    {
+      "step": 1,
+      "stack": [
+        "0",
+        "ID",
+        "2"
+      ],
+      "remaining_input": [
+        "=",
+        ";",
+        "$"
+      ],
+      "action": "SHIFT",
+      "state": 2,
+      "token": {
+        "type": "ID",
+        "lexeme": "x"
+      },
+      "production": null,
+      "goto_state": null
+    },
+    {
+      "step": 2,
+      "stack": [
+        "0",
+        "ID",
+        "2",
+        "ASSIGN",
+        "9"
+      ],
+      "remaining_input": [
+        ";",
+        "$"
+      ],
+      "action": "SHIFT",
+      "state": 9,
+      "token": {
+        "type": "ASSIGN",
+        "lexeme": "="
+      },
+      "production": null,
+      "goto_state": null
+    },
+    {
+      "step": 3,
+      "stack": [
+        "0",
+        "ID",
+        "2",
+        "ASSIGN",
+        "9"
+      ],
+      "remaining_input": [
+        ";",
+        "$"
+      ],
+      "action": "ERROR",
+      "state": 9,
+      "token": null,
+      "production": null,
+      "goto_state": null
+    }
+  ],
+  "stats": {
+    "token_count": 3,
+    "total_steps": 4,
+    "shifts": 2,
+    "reductions": 0,
+    "errors": 1
+  }
+}
